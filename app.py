@@ -13,9 +13,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 
-# ============================================================
-# PALETA Y ESTILO GLOBAL
-# ============================================================
 
 PALETTE = [
     "#916b5e",
@@ -30,8 +27,8 @@ PALETTE = [
     "#879281",
 ]
 
-BG_BODY = "#ecdfcd"   # beige
-TEXT_COLOR = "#604a33"  # marrón principal
+BG_BODY = "#ecdfcd"   
+TEXT_COLOR = "#604a33" 
 PLOT_BG = "#f5eee2"
 
 pio.templates.default = "plotly_white"
@@ -55,10 +52,6 @@ CARD_STYLE = {
     "boxShadow": "0 2px 4px rgba(0,0,0,0.05)",
 }
 
-
-# ============================================================
-# 1. CARGA Y PREPARACIÓN DE DATOS
-# ============================================================
 
 def categorize_job_title(title):
     t = str(title).lower()
@@ -104,13 +97,11 @@ def load_data():
     df["Job Category"] = df["Job Title"].apply(categorize_job_title)
     df["Education Level"] = df["Education Level"].apply(normalize_education_level)
 
-    # Convertir a numérico
     for col in ["Age", "Salary", "Years of Experience"]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
     df = df.dropna().reset_index(drop=True)
 
-    # Rango de edad (3 grupos)
     age_bins = [18, 29, 39, 60]
     age_labels = ["18–29", "30–39", "40–60"]
     df["Age Range"] = pd.cut(
@@ -124,13 +115,12 @@ def load_data():
     return df
 
 
-# ---- Datos globales para la introducción (mapa + continentes) ----
 def load_world_salary_data():
     """
     Carga el dataset global con columnas:
     country_name, continent_name, wage_span, median_salary, ...
     """
-    dfw = pd.read_csv("world_salary.csv")  # cambia el nombre si tu fichero es otro
+    dfw = pd.read_csv("world_salary.csv")  
     dfw = dfw[["country_name", "continent_name", "median_salary"]].dropna()
     return dfw
 
@@ -173,10 +163,6 @@ def train_model(df_model):
     return model, df_y, rmse, r2
 
 
-# ============================================================
-# 2. PIPELINE DE DATOS Y MODELO
-# ============================================================
-
 df_raw = load_data()
 df_model, mappings = encode_for_model(df_raw)
 model, df_y, rmse, r2 = train_model(df_model)
@@ -185,10 +171,6 @@ mean_salary = df_model["Salary"].mean()
 print("=== Modelo cargado ===")
 print("RMSE:", rmse, "| R2:", r2)
 
-
-# ============================================================
-# 3. FIGURAS
-# ============================================================
 
 def fig_box_edu(df):
     fig = px.box(
@@ -385,10 +367,6 @@ def fig_actual_pred(df_y):
     return fig
 
 
-# ============================================================
-# 4. DASH APP
-# ============================================================
-
 app = dash.Dash(__name__)
 server = app.server
 
@@ -421,7 +399,6 @@ app.layout = html.Div(
         ),
         dcc.Tabs(
             [
-                # TAB 1: INTRODUCCIÓN
                 dcc.Tab(
                     label="Introducción",
                     style=TAB_STYLE,
@@ -453,7 +430,6 @@ app.layout = html.Div(
                     ],
                 ),
 
-                # TAB 2: ANÁLISIS DE SALARIOS
                 dcc.Tab(
                     label="Análisis de salarios",
                     style=TAB_STYLE,
@@ -518,7 +494,6 @@ app.layout = html.Div(
                     ],
                 ),
 
-                # TAB 3: PREDICCIÓN DE SALARIO
                 dcc.Tab(
                     label="Predicción de salario",
                     style=TAB_STYLE,
@@ -529,7 +504,6 @@ app.layout = html.Div(
                         html.Div(
                             style={"display": "flex", "gap": "40px", "alignItems": "flex-start"},
                             children=[
-                                # Columna izquierda: formulario
                                 html.Div(
                                     style={"width": "40%"},
                                     children=[
@@ -580,7 +554,6 @@ app.layout = html.Div(
                                     ],
                                 ),
 
-                                # Columna derecha: resultados
                                 html.Div(
                                     style={"width": "60%"},
                                     children=[
@@ -616,10 +589,6 @@ app.layout = html.Div(
     },
 )
 
-
-# ============================================================
-# 5. CALLBACK: PREDICCIÓN
-# ============================================================
 
 @app.callback(
     Output("prediction-output", "children"),
@@ -678,7 +647,6 @@ def predict_salary_callback(n, age, exp, gender, edu, job):
     spain_factor = 0.5
     pred_spain_eur = pred_eur * spain_factor
 
-    # Punto de predicción bien destacado
     fig_base.add_trace(
         go.Scatter(
             x=[age],
@@ -686,7 +654,7 @@ def predict_salary_callback(n, age, exp, gender, edu, job):
             mode="markers",
             marker=dict(
                 size=14,
-                color=PALETTE[9],          # verde/gris
+                color=PALETTE[9],          
                 line=dict(width=1.5, color="black"),
             ),
             name="Tu predicción",
@@ -756,10 +724,6 @@ def predict_salary_callback(n, age, exp, gender, edu, job):
 
     return cards, fig_base, comp_fig
 
-
-# ============================================================
-# 6. MAIN
-# ============================================================
 
 if __name__ == "__main__":
     app.run(debug=True)
